@@ -49,25 +49,58 @@ app.post("/submit-cv", jsonParser, upload.single("file"), (req, res) => {
     to: process.env.EMAIL_TO,
     subject: "User uploaded CV",
     text: `
-  Name: ${name}
-  Email: ${email}
-  Phone: ${phone}
-  Date of Birth: ${dob}
-  Nationality: ${nationality}
-  Country of residence: ${countryOfResidence}
-  Marital Status: ${maritalStatus}
-  Dependent Children: ${dependentChildren}
-  Teaching Regions: ${teachingRegions}
-  Application Subject: ${applicationSubject}
-  Qualified Subject 1: ${qualifiedSubject}
-  Qualified Subject 2: ${qualifiedSubject2}
-          `,
+    Name: ${name}
+    Email: ${email}
+    Phone: ${phone}
+    Date of Birth: ${dob}
+    Nationality: ${nationality}
+    Country of residence: ${countryOfResidence}
+    Marital Status: ${maritalStatus}
+    Dependent Children: ${dependentChildren}
+    Teaching Regions: ${teachingRegions}
+    Application Subject: ${applicationSubject}
+    Qualified Subject 1: ${qualifiedSubject}
+    Qualified Subject 2: ${qualifiedSubject2}
+            `,
     attachments: [
       {
         filename: file.originalname,
         content: file.buffer,
       },
     ],
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log(error);
+      res.status(500).send("Error sending email.");
+    } else {
+      console.log("Email sent: " + info.response);
+      res.status(200).send("Email sent successfully.");
+    }
+  });
+});
+
+// API endpoint to receive email and filefrom Tutoring Request page
+app.post("/tutoring-req", jsonParser, upload.single("file"), (req, res) => {
+  const { topic, name, edu, timing, area, email, phone, specReq } = req.body;
+
+  const file = req.file;
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: process.env.EMAIL_TO,
+    subject: "Find A Tutor",
+    text: `
+      Topic: ${topic},
+      Name: ${name},
+      Education Level: ${edu},
+      Select timing: ${timing},
+      Area: ${area},
+      Email: ${email},
+      Phone: ${phone},
+      Special Requirenments: ${specReq},
+            `
   };
 
   transporter.sendMail(mailOptions, (error, info) => {
@@ -88,42 +121,42 @@ app.post(
   upload.single("file"),
   (req, res) => {
     let {
-    fName,
-    lName,
-    mName,
-    gender,
-    bDay,
-    nation,
-    birthCountry,
-    addressStr,
-    addressStrLine2,
-    city,
-    stateProvince,
-    postalZipCode,
-    country,
-    phone,
-    email,
-    emergContactName,
-    emergContactRelation,
-    emergContactAddr,
-    emergContactPhone,
-    intendedDegree,
-    sponsorName,
-    proposedStartDate,
-    scholarship,
-    secondaryEduName,
-    secondaryEduCountry,
-    secondaryEduDates,
-    eduQualifSubject,
-    eduQualifLevel,
-    eduQualifGrade,
-    eduQualifDate,
-    englishLangCertificate,
-    englishLangCertificateGrade,
-    englishLangCertificateDate,
-    applicationSupportStatement,
-    confirmationCheckbox,
-    certificationCheckbox,
+      fName,
+      lName,
+      mName,
+      gender,
+      bDay,
+      nation,
+      birthCountry,
+      addressStr,
+      addressStrLine2,
+      city,
+      stateProvince,
+      postalZipCode,
+      country,
+      phone,
+      email,
+      emergContactName,
+      emergContactRelation,
+      emergContactAddr,
+      emergContactPhone,
+      intendedDegree,
+      sponsorName,
+      proposedStartDate,
+      scholarship,
+      secondaryEduName,
+      secondaryEduCountry,
+      secondaryEduDates,
+      eduQualifSubject,
+      eduQualifLevel,
+      eduQualifGrade,
+      eduQualifDate,
+      englishLangCertificate,
+      englishLangCertificateGrade,
+      englishLangCertificateDate,
+      applicationSupportStatement,
+      confirmationCheckbox,
+      certificationCheckbox,
     } = req.body;
 
     const mailOptions = {
@@ -172,10 +205,10 @@ app.post(
   ${applicationSupportStatement}
 
   I confirm that I give the authority to Scholar Students Ltd to discuss my application, receive correspondence and apply to universities and institutes in New Zealand on my behalf.
-  ${confirmationCheckbox == 'true' ? "Accepted" : "Rejected"}
+  ${confirmationCheckbox == "true" ? "Accepted" : "Rejected"}
 
   I certify that, to the best of my knowledge, the information I have provided is complete and true.
-  ${certificationCheckbox == 'true' ? "Accepted" : "Rejected"}
+  ${certificationCheckbox == "true" ? "Accepted" : "Rejected"}
 
           `,
     };
