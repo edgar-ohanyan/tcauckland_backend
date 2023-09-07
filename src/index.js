@@ -85,8 +85,6 @@ app.post("/submit-cv", jsonParser, upload.single("file"), (req, res) => {
 app.post("/tutoring-req", jsonParser, upload.single("file"), (req, res) => {
   const { topic, name, edu, timing, area, email, phone, specReq } = req.body;
 
-  const file = req.file;
-
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: process.env.EMAIL_TO,
@@ -100,7 +98,61 @@ app.post("/tutoring-req", jsonParser, upload.single("file"), (req, res) => {
       Email: ${email},
       Phone: ${phone},
       Special Requirenments: ${specReq},
-            `
+            `,
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log(error);
+      res.status(500).send("Error sending email.");
+    } else {
+      console.log("Email sent: " + info.response);
+      res.status(200).send("Email sent successfully.");
+    }
+  });
+});
+
+// API endpoint to receive email and filefrom Submit Vacancy page
+app.post("/submit-vacancy", jsonParser, upload.single("file"), (req, res) => {
+  const {
+    name,
+    email,
+    phone,
+    compName,
+    schoolName,
+    jobTitle,
+    website,
+    city,
+    country,
+    curriculum,
+    ey,
+    primary,
+    secondary,
+    wholeSchool,
+    noOfVaccanies,
+  } = req.body;
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: process.env.EMAIL_TO,
+    subject: "Submit Vacancy",
+    text: `
+      Name: ${name},
+      Email: ${email},
+      Phone: ${phone},
+      Company Name: ${compName},
+      School Name: ${schoolName},
+      Job Title: ${jobTitle},
+      Website: ${website},
+      City: ${city},
+      Country: ${country},
+      Curriculum: ${curriculum},
+      EY: ${ey == "true" ? "Accepted" : "Empty"}
+      Primary: ${primary == "true" ? "Accepted" : "Empty"},
+      Secondary: ${secondary == "true" ? "Accepted" : "Empty"},
+      Whole School: ${wholeSchool == "true" ? "Accepted" : "Empty"},
+      No Of Vacancies: ${noOfVaccanies},
+            `,
   };
 
   transporter.sendMail(mailOptions, (error, info) => {
