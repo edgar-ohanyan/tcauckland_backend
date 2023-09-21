@@ -81,6 +81,70 @@ app.post("/submit-cv", jsonParser, upload.single("file"), (req, res) => {
   });
 });
 
+// API endpoint to receive email and filefrom Contact Us page
+app.post("/contact-us", jsonParser, upload.single("file"), (req, res) => {
+  const { name, email, phone, message } = req.body;
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: process.env.EMAIL_TO,
+    subject: "Contact Us Message",
+    text: `
+    Full Name: ${name}
+    Email: ${email}
+    Phone: ${phone}
+    Message: ${message}
+            `,
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log(error);
+      res.status(500).send("Error sending email.");
+    } else {
+      console.log("Email sent: " + info.response);
+      res.status(200).send("Email sent successfully.");
+    }
+  });
+});
+
+// API endpoint to receive email and file from Apply job Page
+app.post("/apply-job", jsonParser, upload.single("file"), (req, res) => {
+  const { title, startDate } = req.body;
+  const file = req.file;
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+
+    to: process.env.EMAIL_TO,
+    subject: "Contact Us Message",
+    text: `
+    User applied for a job.
+
+    Job details:
+    Title: ${title}
+    Start Date: ${startDate}
+    
+            `,
+    attachments: [
+      {
+        filename: file.originalname,
+        content: file.buffer,
+      },
+    ],
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log(error);
+      res.status(500).send("Error sending email.");
+    } else {
+      console.log("Email sent: " + info.response);
+      res.status(200).send("Email sent successfully.");
+    }
+  });
+});
+
 // API endpoint to receive email and filefrom Tutoring Request page
 app.post("/tutoring-req", jsonParser, upload.single("file"), (req, res) => {
   const { topic, name, edu, timing, area, email, phone, specReq } = req.body;
