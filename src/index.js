@@ -25,6 +25,16 @@ const transporter = nodemailer.createTransport({
 const cors = require("cors");
 app.use(cors());
 
+const titleCase = (str) => {
+  if (!str) return "";
+  const splitStr = str.toLowerCase().split(" ");
+  for (var i = 0; i < splitStr.length; i++) {
+    splitStr[i] =
+      splitStr[i].charAt(0).toUpperCase() + splitStr[i].substring(1);
+  }
+  return splitStr.join(" ");
+};
+
 // API endpoint to receive email and filefrom submit-cv page
 app.post("/submit-cv", jsonParser, upload.single("file"), (req, res) => {
   const {
@@ -117,13 +127,11 @@ app.post("/apply-job", jsonParser, upload.single("file"), (req, res) => {
     from: process.env.EMAIL_USER,
 
     to: process.env.EMAIL_TO,
-    subject: "Contact Us Message",
+    subject: "User application",
     text: `
-    User applied for a job.
+    User applied for a \"${titleCase(title)}\ job ."
 
-    Job details:
-    Title: ${title}
-    Start Date: ${startDate}
+
     
             `,
     attachments: [
