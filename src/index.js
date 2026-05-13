@@ -36,6 +36,17 @@ const titleCase = (str) => {
 };
 
 // API endpoint to receive email and filefrom submit-cv page
+// API endpoint to receive CV submissions from the job application form.
+//
+// The original implementation assumed that a file was always provided with the
+// request. However, in practice users may submit the form without attaching a
+// résumé, which would cause `req.file` to be undefined. Accessing properties
+// like `req.file.originalname` on an undefined object throws a runtime error
+// and results in a 500 response with no useful information. To make the
+// endpoint robust we now check whether a file was uploaded before referencing
+// it. If a file is present we include it as an attachment; otherwise we omit
+// the attachments field entirely. Nodemailer accepts the absence of
+// `attachments` and will still send the email.
 app.post("/submit-cv", jsonParser, upload.single("file"), (req, res) => {
   const {
     name,
@@ -52,8 +63,8 @@ app.post("/submit-cv", jsonParser, upload.single("file"), (req, res) => {
     qualifiedSubject2,
   } = req.body;
 
-  const file = req.file;
-
+  // Build the base mail options. We always send the textual summary of the
+  // application. Attachments will be added only if a file was uploaded.
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: process.env.EMAIL_TO,
@@ -72,13 +83,17 @@ app.post("/submit-cv", jsonParser, upload.single("file"), (req, res) => {
     Qualified Subject 1: ${qualifiedSubject}
     Qualified Subject 2: ${qualifiedSubject2}
             `,
-    attachments: [
-      {
-        filename: file.originalname,
-        content: file.buffer,
-      },
-    ],
   };
+
+  // If a file was uploaded, include it in the attachments array.
+  if (req.file) {
+    mailOptions.attachments = [
+      {
+        filename: req.file.originalname,
+        content: req.file.buffer,
+      },
+    ];
+  }
 
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
@@ -119,28 +134,30 @@ app.post("/contact-us", jsonParser, upload.single("file"), (req, res) => {
 });
 
 // API endpoint to receive email and file from Apply job Page
+// API endpoint to receive job applications. The original code assumed a file
+// was always included. We now check for its presence before accessing its
+// properties and adding attachments.
 app.post("/apply-job", jsonParser, upload.single("file"), (req, res) => {
   const { title, startDate } = req.body;
-  const file = req.file;
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
-
     to: process.env.EMAIL_TO,
     subject: "User application",
     text: `
-    User applied for a \"${titleCase(title)}\ job ."
-
-
-    
-            `,
-    attachments: [
-      {
-        filename: file.originalname,
-        content: file.buffer,
-      },
-    ],
+    User applied for a "${titleCase(title)}" job.
+    `,
   };
+
+  // Only attach the uploaded CV if one was provided
+  if (req.file) {
+    mailOptions.attachments = [
+      {
+        filename: req.file.originalname,
+        content: req.file.buffer,
+      },
+    ];
+  }
 
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
